@@ -2,7 +2,7 @@
  - Note that in most cases parameters, pattern-matching and guards have been  -
  - omitted! You will have to add those yourself.                              -}
 
-{-# LANGUAGE TupleSections #-} 
+{-# LANGUAGE TupleSections #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {- A handy syntax extension. See:
 
@@ -27,11 +27,11 @@ data Rose a = MkRose a [Rose a]
     deriving (Eq, Show)
 
 -- Exercise 1
-rose = MkRose 1 [MkRose 3 [], MkRose 4 [], MkRose 5 []] 
+rose = MkRose 1 [MkRose 3 [], MkRose 4 [], MkRose 5 []]
 rose2 = MkRose 12 [rose, rose, rose]
 
 root :: Rose a -> a
-root (MkRose r _) = r 
+root (MkRose r _) = r
 
 children :: Rose a -> [Rose a]
 children (MkRose _ c) = c
@@ -56,9 +56,9 @@ data Player = P1 | P2
 instance Show Player where
     show P1 = "Player 1"
     show P2 = "Player 2"
-    
+
 -- Exercise 3
-    
+
 nextPlayer :: Player -> Player
 nextPlayer p | p == P1   = P2
              | otherwise = P1
@@ -79,8 +79,22 @@ symbol :: Player -> Field
 symbol p | p == P1  = X
          | otherwise = O
 
+player :: Field -> Maybe Player
+player X = Just P1
+player O = Just P2
+player B = Nothing
+
 type Row   = (Field, Field, Field)
 type Board = (Row, Row, Row)
+
+tupToList :: (a,a,a) -> [a]
+tupToList (x,y,z) = [x,y,z]
+
+tup2ToList :: (a,a) -> [a]
+tup2ToList (x,y) = [x,y]
+
+listToTup :: [a]-> (a,a,a)
+listToTup [x,y,z] = (x,y,z)
 
 -- Exercise 5
 
@@ -104,32 +118,47 @@ printBoard ((a,b,c), (d,e,f), (g,h,i)) = show a ++ "|" ++ show b ++ "|" ++ show 
 
 
 -- | Move generation
-             
--- Exercise 8
-             
-moves :: Player -> Board -> [Board]
-moves = undefined
 
-traverseFst :: (a -> [d]) -> (a,b,c) -> [(d,b,c)] 
+-- Exercise 8
+
+moves :: Player -> Board -> [Board]
+moves p = traverseAll f
+    where f  = traverseAll f2
+          f2 B = [symbol p]
+          f2 _ = []
+
+traverseFst :: (a -> [d]) -> (a,b,c) -> [(d,b,c)]
 traverseFst f (a,b,c) =  map (,b,c) $ f a
 
-traverseSnd :: (b -> [d]) -> (a,b,c) -> [(a,d,c)] 
-traverseSnd f (a,b,c) =  map (a, ,c) $ f b 
+traverseSnd :: (b -> [d]) -> (a,b,c) -> [(a,d,c)]
+traverseSnd f (a,b,c) =  map (a, ,c) $ f b
 
-traverseTrd :: (c -> [d]) -> (a,b,c) -> [(a,b,d)] 
-traverseTrd f (a,b,c) =  map (a,b,) $ f c 
+traverseTrd :: (c -> [d]) -> (a,b,c) -> [(a,b,d)]
+traverseTrd f (a,b,c) =  map (a,b,) $ f c
 
 traverseAll :: (a -> [a]) -> (a,a,a) -> [(a,a,a)]
-traverseAll f (a, b, c) = concatMap (traverseTrd f) (concatMap (traverseSnd f) (traverseFst f (a,b,c))) 
+traverseAll f t = traverseTrd f t <> traverseSnd f t <> traverseFst f t
 
-func :: Int -> [Int]
-func i = [i, -i] 
 -- | Gametree generation
 
 -- Exercise 9
+(%%) :: Maybe a -> Maybe a -> Maybe a
+(Just x) %% (Just y) = Just x
+(Just x) %% Nothing = Just x
+Nothing %% (Just y) = Just y
+Nothing %% Nothing = Nothing
 
 hasWinner :: Board -> Maybe Player
-hasWinner = undefined
+hasWinner b =    folder (map (rowWinner . tupToList) (tupToList b) <>
+                 map (rowWinner . tupToList) (tupToList $ verticals b) <>
+                 map (rowWinner . tupToList) (tup2ToList $ diagonals b))
+    where folder :: [Maybe Player] -> Maybe Player
+          folder [] = Nothing
+          folder (x:xs) = x %% folder xs
+
+rowWinner :: [Field] -> Maybe Player
+rowWinner [a,b,c] | a == b && b == c = player a
+                  | otherwise = Nothing
 
 -- Exercise 10
 
@@ -182,7 +211,7 @@ main = do
     typeOfP2 <- askFor "Should Player 2 be a (H)uman or a (C)omputer player?"
                        [Human, Computer]
 
-    let playerType :: Player -> PlayerType 
+    let playerType :: Player -> PlayerType
         playerType P1 = typeOfP1
         playerType P2 = typeOfP2
 
@@ -221,7 +250,7 @@ main = do
                     . map (intercalate "    ")
                     . transpose
                     . map lines
-                    . map (\(i,b) -> "(" ++ show i ++ "): \n" ++ printBoard b) 
+                    . map (\(i,b) -> "(" ++ show i ++ "): \n" ++ printBoard b)
                     . zip [1 :: Integer ..]
 
     gameLoop P1 emptyBoard
