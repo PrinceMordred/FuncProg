@@ -143,19 +143,16 @@ traverseAll f t = traverseTrd f t <> traverseSnd f t <> traverseFst f t
 
 -- Exercise 9
 (%%) :: Maybe a -> Maybe a -> Maybe a
-(Just x) %% (Just y) = Just x
-(Just x) %% Nothing = Just x
-Nothing %% (Just y) = Just y
 Nothing %% Nothing = Nothing
+Just x %% _ = Just x
+_ %% Just y = Just y 
+
 
 hasWinner :: Board -> Maybe Player
-hasWinner b =    folder (map (rowWinner . tupToList) (tupToList b) <>
+hasWinner b =   foldl (%%) Nothing (map (rowWinner . tupToList) (tupToList b) <>
                  map (rowWinner . tupToList) (tupToList $ verticals b) <>
-                 map (rowWinner . tupToList) (tup2ToList $ diagonals b))
-    where folder :: [Maybe Player] -> Maybe Player
-          folder [] = Nothing
-          folder (x:xs) = x %% folder xs
-
+                 map (rowWinner . tupToList) (tup2ToList $ diagonals b)) 
+                 
 rowWinner :: [Field] -> Maybe Player
 rowWinner [a,b,c] | a == b && b == c = player a
                   | otherwise = Nothing
