@@ -111,7 +111,17 @@ moves :: Player -> Board -> [Board]
 moves = undefined
 
 traverseFst :: (a -> [d]) -> (a,b,c) -> [(d,b,c)] 
-traverseFst _ (a,b,c)= 
+traverseFst f (a,b,c) =  map (,b,c) ds 
+        where ds = f a 
+traverseSnd :: (b -> [d]) -> (a,b,c) -> [(a,d,c)] 
+traverseSnd f (a,b,c) =  map (a, ,c) ds 
+        where ds = f b 
+traverseTrd :: (c -> [d]) -> (a,b,c) -> [(a,b,d)] 
+traverseTrd f (a,b,c) =  map (a,b,) ds 
+        where ds = f c 
+
+traverseAll :: (a -> [a]) -> (a,a,a) -> [(a,a,a)]
+traverseAll f (a, b, c) = concatMap (traverseTrd f) (concatMap (traverseSnd f) (traverseFst f (a,b,c))) 
 
 -- | Gametree generation
 
