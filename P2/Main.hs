@@ -158,9 +158,12 @@ rowWinner [a,b,c] | a == b && b == c = player a
                   | otherwise = Nothing
 
 -- Exercise 10
-
 gameTree :: Player -> Board -> Rose Board
-gameTree = undefined
+gameTree p b  = case hasWinner b of 
+  Nothing -> MkRose b (map (gameTree (nextPlayer p)) (moves (nextPlayer p) b))
+  Just pl -> MkRose b []     
+   
+
 
 -- | Game complexity
 
