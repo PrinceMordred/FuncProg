@@ -106,7 +106,7 @@ diagonals ((a,b,c), (d,e,f), (g,h,i)) = ((a,e,i), (c, e, g))
 
 -- Exercise 6
 
-emptyBoard :: Board
+fullBoard = ((X,O,X), (O,X,O),(O,X,O))
 emptyBoard = ((B,B,B),(B,B,B),(B,B,B))
 
 -- Exercise 7
@@ -156,12 +156,13 @@ hasWinner b =   foldl (%%) Nothing (map (rowWinner . tupToList) (tupToList b) <>
 rowWinner :: [Field] -> Maybe Player
 rowWinner [a,b,c] | a == b && b == c = player a
                   | otherwise = Nothing
-
 -- Exercise 10
 gameTree :: Player -> Board -> Rose Board
-gameTree p b  = case hasWinner b of 
-  Nothing -> MkRose b (map (gameTree (nextPlayer p)) (moves (nextPlayer p) b))
+gameTree p b  = case hasWinner b of  
   Just pl -> MkRose b []     
+  Nothing -> case elemIndex B (concatMap tupToList (tupToList b)) of 
+             Nothing -> MkRose b []
+             Just pl -> MkRose b (map (gameTree (nextPlayer p)) (moves (nextPlayer p) b))
    
 
 
@@ -170,14 +171,19 @@ gameTree p b  = case hasWinner b of
 -- Exercise 11
 
 gameTreeComplexity :: Int
-gameTreeComplexity = undefined
+gameTreeComplexity = leaves $ gameTree P1 emptyBoard
 
 -- | Minimax
 
 -- Exercise 12
 
 minimax :: Player -> Rose Board -> Rose Int
-minimax = undefined
+minimax p rb = case hasWinner $ root rb of
+  Nothing ->  undefined --minimax' nextPlayer p rb-- continue
+  Just pl ->  undefined--go back up the list
+
+minimax' :: Player -> Board -> Int
+minimax' = undefined
 
 -- * Lazier minimum and maximums
 
