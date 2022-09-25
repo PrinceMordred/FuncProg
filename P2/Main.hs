@@ -146,25 +146,25 @@ traverseAll f t = traverseTrd f t <> traverseSnd f t <> traverseFst f t
 (%%) :: Maybe a -> Maybe a -> Maybe a
 Nothing %% Nothing = Nothing
 Just x %% _ = Just x
-_ %% Just y = Just y 
+_ %% Just y = Just y
 
 
 hasWinner :: Board -> Maybe Player
 hasWinner b =   foldl (%%) Nothing (map (rowWinner . tupToList) (tupToList b) <>
                  map (rowWinner . tupToList) (tupToList $ verticals b) <>
-                 map (rowWinner . tupToList) (tup2ToList $ diagonals b)) 
-                 
+                 map (rowWinner . tupToList) (tup2ToList $ diagonals b))
+
 rowWinner :: [Field] -> Maybe Player
 rowWinner [a,b,c] | a == b && b == c = player a
                   | otherwise = Nothing
 -- Exercise 10
 gameTree :: Player -> Board -> Rose Board
-gameTree p b  = case hasWinner b of  
-  Just pl -> MkRose b []     
-  Nothing -> case elemIndex B (concatMap tupToList (tupToList b)) of 
+gameTree p b  = case hasWinner b of
+  Just pl -> MkRose b []
+  Nothing -> case elemIndex B (concatMap tupToList (tupToList b)) of
              Nothing -> MkRose b []
              Just pl -> MkRose b (map (gameTree (nextPlayer p)) (moves (nextPlayer p) b))
-   
+
 
 
 -- | Game complexity
@@ -178,23 +178,24 @@ gameTreeComplexity = leaves $ gameTree P1 emptyBoard
 
 -- Exercise 12
 
-minimax :: Player -> Rose Board -> Rose Int  
+minimax :: Player -> Rose Board -> Rose Int
 minimax p rb = case hasWinner $ root rb of
-  Nothing ->  undefined --minimax' nextPlayer p rb-- continue
-  Just pl ->  MkRose (maximum gameStates) ()
-    where gameStates = children rb
-
+  Just pl -> MkRose (state $ root rb) []    --bottom level
+  Nothing -> MkRose a (map b c)             --no winner = not bottom level
+    where a = maximum $ map (root . b) c    -- take the max / min of all the roots of the rb
+          b = minimax (nextPlayer p)
+          c = children rb
 
 --P1 win = 1 | tie =0 | P2 = -1
 
 state :: Board -> Int
 state b = case elemIndex B (concatMap tupToList (tupToList b)) of
         Nothing -> 0 --tie
-        Just _  -> case hasWinner b of 
+        Just _  -> case hasWinner b of
           Nothing -> undefined -- this should never happen
           Just pl -> if pl == P1 then  1
                                  else -1
-                            
+
 
 
 -- * Lazier minimum and maximums
