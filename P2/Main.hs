@@ -21,6 +21,7 @@ import Data.Maybe
 
 import System.IO
 
+
 -- | Rose trees
 
 data Rose a = MkRose a [Rose a]
@@ -177,13 +178,24 @@ gameTreeComplexity = leaves $ gameTree P1 emptyBoard
 
 -- Exercise 12
 
-minimax :: Player -> Rose Board -> Rose Int
+minimax :: Player -> Rose Board -> Rose Int  
 minimax p rb = case hasWinner $ root rb of
   Nothing ->  undefined --minimax' nextPlayer p rb-- continue
-  Just pl ->  undefined--go back up the list
+  Just pl ->  MkRose (maximum gameStates) ()
+    where gameStates = children rb
 
-minimax' :: Player -> Board -> Int
-minimax' = undefined
+
+--P1 win = 1 | tie =0 | P2 = -1
+
+state :: Board -> Int
+state b = case elemIndex B (concatMap tupToList (tupToList b)) of
+        Nothing -> 0 --tie
+        Just _  -> case hasWinner b of 
+          Nothing -> undefined -- this should never happen
+          Just pl -> if pl == P1 then  1
+                                 else -1
+                            
+
 
 -- * Lazier minimum and maximums
 
