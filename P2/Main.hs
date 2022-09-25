@@ -20,6 +20,7 @@ import Data.List
 import Data.Maybe
 
 import System.IO
+import Debug.Trace (trace)
 
 
 -- | Rose trees
@@ -109,13 +110,14 @@ diagonals ((a,b,c), (d,e,f), (g,h,i)) = ((a,e,i), (c, e, g))
 
 fullBoard = ((X,O,X), (O,X,O),(O,X,O))
 emptyBoard = ((B,B,B),(B,B,B),(B,B,B))
+xbrd = ((O,X,O),(X,X,X),(X,O,O))
+ybrd = ((X,O,X),(X,O,O),(O,O,X))
 
 -- Exercise 7
-
 printBoard :: Board -> String
-printBoard ((a,b,c), (d,e,f), (g,h,i)) = show a ++ "|" ++ show b ++ "|" ++ show c ++ "|" ++ "\n-+-+-\n" ++
-                                         show d ++ "|" ++ show e ++ "|" ++ show f ++ "|" ++ "\n-+-+-\n" ++
-                                         show g ++ "|" ++ show h ++ "|" ++ show i ++ "|"
+printBoard ((a,b,c), (d,e,f), (g,h,i)) = show a ++ "|" ++ show b ++ "|" ++ show c ++ "\n-+-+-\n" ++
+                                         show d ++ "|" ++ show e ++ "|" ++ show f ++ "\n-+-+-\n" ++
+                                         show g ++ "|" ++ show h ++ "|" ++ show i ++ "\n"
 
 
 -- | Move generation
@@ -148,7 +150,6 @@ Nothing %% Nothing = Nothing
 Just x %% _ = Just x
 _ %% Just y = Just y
 
-
 hasWinner :: Board -> Maybe Player
 hasWinner b =   foldl (%%) Nothing (map (rowWinner . tupToList) (tupToList b) <>
                  map (rowWinner . tupToList) (tupToList $ verticals b) <>
@@ -163,9 +164,7 @@ gameTree p b  = case hasWinner b of
   Just pl -> MkRose b []
   Nothing -> case elemIndex B (concatMap tupToList (tupToList b)) of
              Nothing -> MkRose b []
-             Just pl -> MkRose b (map (gameTree (nextPlayer p)) (moves (nextPlayer p) b))
-
-
+             Just pl -> MkRose b (map (gameTree (nextPlayer p)) (moves p b))
 
 -- | Game complexity
 
@@ -177,24 +176,25 @@ gameTreeComplexity = leaves $ gameTree P1 emptyBoard
 -- | Minimax
 
 -- Exercise 12
+roseTree = gameTree P1 emptyBoard
 
 minimax :: Player -> Rose Board -> Rose Int
-minimax p rb = case hasWinner $ root rb of
-  Just pl -> MkRose (state $ root rb) []    --bottom level
-  Nothing -> MkRose a (map b c)             --no winner = not bottom level
-    where a = maximum $ map (root . b) c    -- take the max / min of all the roots of the rb
+minimax p rb = case children rb of
+  [] -> MkRose (state p $ root rb) []    --bottom level
+  _  -> MkRose a (map b c)               --no children = not bottom level
+    where a = f p $ map (root . b) c    -- take the max / min of all the roots of the rb
           b = minimax (nextPlayer p)
           c = children rb
 
---P1 win = 1 | tie =0 | P2 = -1
+          f :: Player -> ([Int] -> Int) 
+          f P1 = maximum 
+          f P2 = minimum
 
-state :: Board -> Int
-state b = case elemIndex B (concatMap tupToList (tupToList b)) of
-        Nothing -> 0 --tie
-        Just _  -> case hasWinner b of
-          Nothing -> undefined -- this should never happen
-          Just pl -> if pl == P1 then  1
-                                 else -1
+state :: Player -> Board -> Int  --P1 win = 1 | tie =0 | P2 = -1
+state p b = case hasWinner b of
+          Nothing -> 0
+          Just pl -> if pl == p then  1
+                                else -1
 
 
 
