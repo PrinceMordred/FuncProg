@@ -111,7 +111,7 @@ diagonals ((a,b,c), (d,e,f), (g,h,i)) = ((a,e,i), (c, e, g))
 fullBoard = ((X,O,X), (O,X,O),(O,X,O))
 emptyBoard = ((B,B,B),(B,B,B),(B,B,B))
 xbrd = ((O,X,O),(X,X,X),(X,O,O))
-ybrd = ((X,O,X),(X,O,O),(O,O,X))
+nbrd = ((X,O,X),(X,B,O),(O,O,X))
 
 -- Exercise 7
 printBoard :: Board -> String
@@ -179,41 +179,54 @@ gameTreeComplexity = leaves $ gameTree P1 emptyBoard
 roseTree = gameTree P1 emptyBoard
 
 minimax :: Player -> Rose Board -> Rose Int
-minimax p rb = case children rb of
-  [] -> MkRose (state p $ root rb) []    --bottom level
-  _  -> MkRose a (map b c)               --no children = not bottom level
-    where a = f p $ map (root . b) c    -- take the max / min of all the roots of the rb
-          b = minimax (nextPlayer p)
-          c = children rb
+minimax sp = minimax' sp 
+    where 
+    minimax' :: Player -> Rose Board -> Rose Int
+    minimax' p rb  = case children rb of
+        [] -> MkRose (state $ root rb) []
+        _  -> MkRose b a
+        where a = map (minimax' (nextPlayer p)) (children rb)
+              b = c a p
+              c :: [Rose Int] -> Player -> Int 
+              c nodes p | p == sp = maximum' $ map root nodes
+                        | otherwise = minimum' $ map root nodes
 
-          f :: Player -> ([Int] -> Int) 
-          f P1 = maximum 
-          f P2 = minimum
-
-state :: Player -> Board -> Int  --P1 win = 1 | tie =0 | P2 = -1
-state p b = case hasWinner b of
-          Nothing -> 0
-          Just pl -> if pl == p then  1
-                                else -1
-
-
+    state :: Board -> Int  --P1 win = 1 | tie =0 | P2 = -1
+    state b = case hasWinner b of
+            Nothing -> 0
+            Just pl -> if pl == sp then  1
+                                    else -1
 
 -- * Lazier minimum and maximums
 
 -- Exercise 13
 
 minimum' :: [Int] -> Int
-minimum' = undefined
+minimum' (x:xs) = minimum' (x:xs) 10 where 
+    minimum' [] min = min
+    minimum' l@(x:xs) min 
+                    | null l    = min
+                    | x == -1   = -1
+                    | otherwise = minimum' xs (Prelude.min min x)  
+                    
+    
 
 maximum' :: [Int] -> Int
-maximum' = undefined
+maximum' (x:xs) = maximum' (x:xs) (-10) where 
+    maximum' [] max = max
+    maximum' l@(x:xs) max 
+                    | null l    = max
+                    | x == 1    = 1
+                    | otherwise = maximum' xs (Prelude.max max x)
 
 -- | Gameplay
 
 -- Exercise 14
 
 makeMove :: Player -> Board -> Maybe Board
-makeMove = undefined
+makeMove p b = (maximum' (map root (children (minimax p (gameTree p b)))))
+
+
 
 -- | Main
 
