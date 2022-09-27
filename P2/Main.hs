@@ -224,7 +224,14 @@ maximum' (x:xs) = maximum' (x:xs) (-10) where
 -- Exercise 14
 
 makeMove :: Player -> Board -> Maybe Board
-makeMove p b = (maximum' (map root (children (minimax p (gameTree p b)))))
+makeMove p b = case elemIndex B (concatMap tupToList (tupToList b)) of
+  Nothing -> Nothing
+  Just _ -> case elemIndex (maximum' iList) iList of
+    Nothing -> Nothing --cant happen
+    Just n -> Just $ nxtGen !! n
+    where iList = map root (children (minimax p (gameTree p b)))
+          nxtGen = map root (children (gameTree p b))
+          
 
 
 
